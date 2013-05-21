@@ -8,7 +8,7 @@ namespace GuildWars2
     /// <summary>
     /// Represents the status of an event.
     /// </summary>
-    public enum EventStatus
+    public enum GwEventStatus
     {
         /// <summary>
         /// Event is in progress.
@@ -47,7 +47,7 @@ namespace GuildWars2
         public readonly string Name;
         public readonly GwWorld World;
         public readonly GwMap Map;
-        public EventStatus Status;
+        public GwEventStatus Status;
 
         private GwEvent(string id, string worldId, string mapId, string status)
         {
@@ -55,28 +55,7 @@ namespace GuildWars2
             Name = NameCache.GetEvent(id);
             World = new GwWorld(worldId);
             Map = new GwMap(mapId);
-
-            switch (status)
-            {
-                case "Active":
-                    Status = EventStatus.Active;
-                    break;
-                case "Success":
-                    Status = EventStatus.Success;
-                    break;
-                case "Fail":
-                    Status = EventStatus.Fail;
-                    break;
-                case "Warmup":
-                    Status = EventStatus.Warmup;
-                    break;
-                case "Preparation":
-                    Status = EventStatus.Preparation;
-                    break;
-                case "Inactive":
-                    Status = EventStatus.Inactive;
-                    break;
-            }
+            Status = (GwEventStatus)Enum.Parse(typeof(GwEventStatus), status);
         }
 
         public override bool Equals(object obj)
