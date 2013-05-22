@@ -8,7 +8,7 @@ namespace GuildWars2
     /// <summary>
     /// Represents the status of an event.
     /// </summary>
-    public enum GwEventStatus
+    public enum GwEventState
     {
         /// <summary>
         /// Event is in progress.
@@ -47,15 +47,15 @@ namespace GuildWars2
         public readonly string Name;
         public readonly GwWorld World;
         public readonly GwMap Map;
-        public GwEventStatus Status;
+        public readonly GwEventState State;
 
-        private GwEvent(string id, string worldId, string mapId, string status)
+        internal GwEvent(string id, string name, GwWorld world, GwMap map, GwEventState state)
         {
             Id = id;
-            Name = NameCache.GetEvent(id);
-            World = new GwWorld(worldId);
-            Map = new GwMap(mapId);
-            Status = (GwEventStatus)Enum.Parse(typeof(GwEventStatus), status);
+            Name = name;
+            World = world;
+            Map = map;
+            State = state;
         }
 
         public override bool Equals(object obj)
@@ -66,7 +66,7 @@ namespace GuildWars2
 
         public override int GetHashCode()
         {
-            return Id.GetHashCode();
+            return Id.GetHashCode() ^ State.GetHashCode();
         }
 
         public static bool operator ==(GwEvent a, GwEvent b)
@@ -77,73 +77,12 @@ namespace GuildWars2
             if (ReferenceEquals(a, null) || ReferenceEquals(b, null))
                 return false;
 
-            return a.Id == b.Id;
+            return a.Id == b.Id && a.State == b.State;
         }
 
         public static bool operator !=(GwEvent a, GwEvent b)
         {
             return !(a == b);
-        }
-
-        private static object eventsLock = new object();
-        private static Dictionary<string, Dictionary<string, GwEvent>> events;
-
-        static GwEvent()
-        {
-            events = new Dictionary<string, Dictionary<string, GwEvent>>();
-        }
-
-        internal static GwEvent Get(string worldId, string eventId)
-        {
-            if (NameCache.GetEvent(eventId) == null)
-            {
-                throw new Exception("Unknown eventId");
-            }
-
-            lock (eventsLock)
-            {
-                Dictionary<string, GwEvent> states;
-                if (!events.TryGetValue(worldId, out states))
-                {
-                    throw new Exception("Unknown worldId, call Refresh first");
-                }
-
-                GwEvent ev;
-                if (!states.TryGetValue(eventId, out ev))
-                {
-                    ev = new GwEvent(eventId, worldId, null, "Inactive");
-                }
-
-                return ev;
-            }
-        }
-
-        internal static Dictionary<string, GwEvent> GetAll(string worldId)
-        {
-            List<string> eventIds = NameCache.GetEvents();
-            return eventIds.Select(id => Get(worldId, id)).ToDictionary(e => e.Id, e => e);
-        }
-
-        internal static void Refresh(string worldId)
-        {
-            lock (eventsLock)
-            {
-                Dictionary<string, GwEvent> states;
-                if (!events.TryGetValue(worldId, out states))
-                {
-                    states = new Dictionary<string, GwEvent>();
-                }
-
-                states.Clear();
-
-                var eventsObj = GwApi.Request("Events", worldId);
-                foreach (var ev in eventsObj.events)
-                {
-                    states.Add((string)ev.event_id, new GwEvent((string)ev.event_id, (string)ev.world_id, (string)ev.map_id, (string)ev.state));
-                }
-
-                events[worldId] = states;
-            }
         }
     }
 }

@@ -12,7 +12,7 @@ namespace Test
             var watcher = new GwWatcher();
 
             // choose a world to watch
-            watcher.World = GwWatcher.Worlds.First(w => w.Name == "Blackgate");
+            watcher.World = watcher.Worlds.First(w => w.Name == "Blackgate");
 
             // what to watch for
             watcher.NotifyFilter = GwNotifyFilter.All;
@@ -21,11 +21,11 @@ namespace Test
             watcher.EnableRaisingEvents = true;
 
             // how often to poll for changes
-            watcher.PollFrequency = new TimeSpan(0, 0, 5);
+            watcher.PollFrequency = new TimeSpan(0, 0, 10);
 
             // called when an event's status changes
-            watcher.EventStatusChanged += (sender, ev) =>
-                Console.WriteLine("{0}: {1}", ev.Name, ev.Status);
+            watcher.EventStateChanged += (sender, ev) =>
+                Console.WriteLine("{0}: {1}", ev.Name, ev.State);
 
             // called when the score of a WvW map changes
             watcher.WvWScoreChanged += (sender, map) =>
@@ -37,7 +37,7 @@ namespace Test
             };
 
             // called when a WvW objective changes
-            watcher.WvWObjectiveChanged += (sender, objective) => 
+            watcher.WvWObjectiveChanged += (sender, objective) =>
                 Console.WriteLine("{0}: {1} now belongs to {2}", objective.Map.Type, objective.Name, objective.Owner);
         }
     }

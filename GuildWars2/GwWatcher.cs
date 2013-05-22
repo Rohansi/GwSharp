@@ -7,10 +7,10 @@ using System.Threading;
 namespace GuildWars2
 {
     [Flags]
-    public enum GwNotifyFilter : ushort
+    public enum GwNotifyFilter
     {
         None = 0,
-        EventStatus = 1,
+        EventState = 1,
         WvWScore = 2,
         WvWObjective = 4,
         WvWMatchChange = 8,
@@ -20,7 +20,7 @@ namespace GuildWars2
 
     public class GwWatcher
     {
-        public delegate void EventStatusChangedCallback(GwWatcher sender, GwEvent ev);
+        public delegate void EventStateChangedCallback(GwWatcher sender, GwEvent ev);
         public delegate void WvWMatchesChangedCallback(GwWatcher sender);
         public delegate void WvWScoreChangedCallback(GwWatcher sender, GwMatchMap map);
         public delegate void WvWObjectiveChangedCallback(GwWatcher sender, GwMatchObjective objective);
@@ -28,31 +28,25 @@ namespace GuildWars2
         /// <summary>
         /// Enumeration of all worlds.
         /// </summary>
-        public static IEnumerable<GwWorld> Worlds
+        public IEnumerable<GwWorld> Worlds
         {
-            get
-            {
-                return NameCache.GetWorlds().Select(id => new GwWorld(id));
-            }
+            get { return api.GetWorlds(); }
         }
 
         /// <summary>
         /// Enumeration of all maps.
         /// </summary>
-        public static IEnumerable<GwMap> Maps
+        public IEnumerable<GwMap> Maps
         {
-            get
-            {
-                return NameCache.GetMaps().Select(id => new GwMap(id));
-            }
+            get { return api.GetMaps(); }
         }
 
         /// <summary>
         /// Enumeration of current WvW matches.
         /// </summary>
-        public static IEnumerable<GwMatch> Matches
+        public IEnumerable<GwMatch> Matches
         {
-            get { return GwMatch.GetAll().Values; }
+            get { lock (dataLock) return (matches ?? api.GetMatches()).Values.ToList(); }
         }
 
         /// <summary>
@@ -109,12 +103,12 @@ namespace GuildWars2
         /// <summary>
         /// Raised when an event status has changed.
         /// </summary>
-        public EventStatusChangedCallback EventStatusChanged;
+        public event EventStateChangedCallback EventStateChanged;
 
         /// <summary>
         /// Raised when the WvW matches change weekly.
         /// </summary>
-        public WvWMatchesChangedCallback WvWMatchesChanged;
+        public event WvWMatchesChangedCallback WvWMatchesChanged;
 
         /// <summary>
         /// Raised when the score for a WvW map changes.
@@ -126,14 +120,21 @@ namespace GuildWars2
         /// </summary>
         public WvWObjectiveChangedCallback WvWObjectiveChanged;
 
+        private Api api;
         private bool enableRaisingEvents = false;
         private GwNotifyFilter notifyFilter;
         private GwWorld world;
         private Thread pollThread;
 
+        private readonly object dataLock = new object();
         private Dictionary<string, GwEvent> events;
         private Dictionary<string, GwMatch> matches;
         private GwMatchDetails details;
+
+        public GwWatcher()
+        {
+            api = new Api();
+        }
 
         private void PollMethod()
         {
@@ -141,26 +142,19 @@ namespace GuildWars2
             {
                 Thread.Sleep(PollFrequency);
 
-                if (NotifyFilter.HasFlag(GwNotifyFilter.EventStatus))
+                if (NotifyFilter.HasFlag(GwNotifyFilter.EventState))
                 {
-                    GwEvent.Refresh(world.Id);
-                    var newEvents = GwEvent.GetAll(world.Id);
+                    var newEvents = api.GetEvents(world.Id);
 
                     if (events != null)
                     {
                         foreach (var ev in events)
                         {
-                            GwEvent newEv;
-                            if (!newEvents.TryGetValue(ev.Key, out newEv))
+                            var newEv = newEvents[ev.Key];
+                            if (ev.Value.State != newEv.State)
                             {
-                                NameCache.Refresh();
-                                continue;
-                            }
-
-                            if (ev.Value.Status != newEv.Status)
-                            {
-                                if (EventStatusChanged != null)
-                                    EventStatusChanged(this, newEv);
+                                if (EventStateChanged != null)
+                                    EventStateChanged(this, newEv);
                             }
                         }
                     }
@@ -171,23 +165,18 @@ namespace GuildWars2
                 // any WvW
                 if ((notifyFilter & GwNotifyFilter.WvW) != 0)
                 {
-                    GwMatch.Refresh();
+                    var newMatches = api.GetMatches();
 
-                    if (notifyFilter.HasFlag(GwNotifyFilter.WvWMatchChange))
+                    if (notifyFilter.HasFlag(GwNotifyFilter.WvWMatchChange) && matches != null)
                     {
-                        var newMatches = GwMatch.GetAll();
-
-                        if (matches != null)
+                        if (!matches.SequenceEqual(newMatches))
                         {
-                            if (!matches.SequenceEqual(newMatches))
-                            {
-                                if (WvWMatchesChanged != null)
-                                    WvWMatchesChanged(this);
-                            }
+                            if (WvWMatchesChanged != null)
+                                WvWMatchesChanged(this);
                         }
-
-                        matches = newMatches;
                     }
+                   
+                    matches = newMatches;
 
                     var newDetails = World.Match.FetchDetails();
                     

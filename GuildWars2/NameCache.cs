@@ -5,20 +5,24 @@ using System.Text;
 
 namespace GuildWars2
 {
-    internal static class NameCache
+    internal class NameCache
     {
-        private static object nameLock = new object();
-        private static Dictionary<string, string> worldNames;
-        private static Dictionary<string, string> mapNames;
-        private static Dictionary<string, string> eventNames;
-        private static Dictionary<string, string> objectiveNames;
+        private Api api;
+        private string language;
+
+        private object nameLock = new object();
+        private Dictionary<string, string> worldNames;
+        private Dictionary<string, string> mapNames;
+        private Dictionary<string, string> eventNames;
+        private Dictionary<string, string> objectiveNames;
          
-        static NameCache()
+        public NameCache(Api api, string language)
         {
-            Refresh();
+            this.api = api;
+            this.language = language;
         }
 
-        public static string GetWorld(string id)
+        public string GetWorld(string id)
         {
             lock (nameLock)
             {
@@ -28,87 +32,50 @@ namespace GuildWars2
             }
         }
 
-        public static string GetMap(string id)
+        public string GetMap(string id)
         {
             lock (nameLock)
-            {
-                string value;
-                mapNames.TryGetValue(id ?? "", out value);
-                return value;
-            }
+                return mapNames[id];
         }
 
-        public static string GetEvent(string id)
+        public string GetEvent(string id)
         {
             lock (nameLock)
-            {
-                string value;
-                eventNames.TryGetValue(id, out value);
-                return value;
-            }
+                return eventNames[id];
         }
 
-        public static string GetObjective(string id)
+        public string GetObjective(string id)
         {
             lock (nameLock)
-            {
-                string value;
-                objectiveNames.TryGetValue(id, out value);
-                return value;
-            }
+                return objectiveNames[id];
         }
 
-        internal static List<string> GetWorlds()
+        public List<string> GetWorlds()
         {
             lock (nameLock)
                 return worldNames.Keys.ToList();
         }
 
-        internal static List<string> GetMaps()
+        public List<string> GetMaps()
         {
             lock (nameLock)
                 return mapNames.Keys.ToList();
         }
 
-        internal static List<string> GetEvents()
+        public List<string> GetEvents()
         {
             lock (nameLock)
                 return eventNames.Keys.ToList();
         }
 
-        internal static void Refresh()
+        public void Refresh()
         {
             lock (nameLock)
             {
-                var worlds = GwApi.Request("WorldNames");
-                worldNames = new Dictionary<string, string>();
-                foreach (var kv in worlds)
-                {
-                    worldNames.Add((string)kv.id, (string)kv.name);
-                }
-
-                var maps = GwApi.Request("MapNames");
-                mapNames = new Dictionary<string, string>();
-                foreach (var kv in maps)
-                {
-                    mapNames.Add((string)kv.id, (string)kv.name);
-                }
-
-                var events = GwApi.Request("EventNames");
-                eventNames = new Dictionary<string, string>();
-                foreach (var kv in events)
-                {
-                    eventNames.Add((string)kv.id, (string)kv.name);
-                }
-
-                var objectives = GwApi.Request("ObjectiveNames");
-                objectiveNames = new Dictionary<string, string>();
-                foreach (var kv in objectives)
-                {
-                    objectiveNames.Add((string)kv.id, (string)kv.name);
-                }
-
-                GwMatch.Refresh();
+                worldNames = api.GetNames("WorldNames", language);
+                mapNames = api.GetNames("MapNames", language);
+                eventNames = api.GetNames("EventNames", language);
+                objectiveNames = api.GetNames("ObjectiveNames", language);
             }
         }
     }

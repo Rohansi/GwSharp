@@ -1,0 +1,7 @@
+Events for:
+ - MatchDetails score changed, not only MatchMap
+ - Data Updated (for event-free use)
+
+Provide previous state in events
+Event-free access to all information
+Code cleanup

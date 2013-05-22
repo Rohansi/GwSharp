@@ -7,18 +7,20 @@ namespace GuildWars2
 {
     public class GwWorld
     {
-        public readonly string Id;
-        public readonly string Name;
+        private readonly Api api;
+        public string Id { get; internal set; }
+        public string Name { get; internal set; }
+
+        internal GwWorld(Api api, string id, string name)
+        {
+            this.api = api;
+            Id = id;
+            Name = name;
+        }
 
         public GwMatch Match
         {
-            get { return GwMatch.Find(this); }
-        }
-
-        internal GwWorld(string id)
-        {
-            Id = id;
-            Name = NameCache.GetWorld(id);
+            get { return api.FindMatch(this); }
         }
 
         public override bool Equals(object obj)

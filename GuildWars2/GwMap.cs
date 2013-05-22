@@ -10,10 +10,10 @@ namespace GuildWars2
         public readonly string Id;
         public readonly string Name;
 
-        internal GwMap(string id)
+        internal GwMap(string id, string name)
         {
             Id = id;
-            Name = NameCache.GetMap(id);
+            Name = name;
         }
 
         public override bool Equals(object obj)
