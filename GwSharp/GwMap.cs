@@ -3,29 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GuildWars2
+namespace GwSharp
 {
-    public class GwWorld
+    public class GwMap
     {
-        private readonly Api api;
-        public string Id { get; internal set; }
-        public string Name { get; internal set; }
+        public readonly string Id;
+        public readonly string Name;
 
-        internal GwWorld(Api api, string id, string name)
+        internal GwMap(string id, string name)
         {
-            this.api = api;
             Id = id;
             Name = name;
         }
 
-        public GwMatch Match
-        {
-            get { return api.FindMatch(this); }
-        }
-
         public override bool Equals(object obj)
         {
-            var other = obj as GwWorld;
+            var other = obj as GwMap;
             return this == other;
         }
 
@@ -34,7 +27,7 @@ namespace GuildWars2
             return Id.GetHashCode();
         }
 
-        public static bool operator ==(GwWorld a, GwWorld b)
+        public static bool operator ==(GwMap a, GwMap b)
         {
             if (ReferenceEquals(a, b))
                 return true;
@@ -45,7 +38,7 @@ namespace GuildWars2
             return a.Id == b.Id;
         }
 
-        public static bool operator !=(GwWorld a, GwWorld b)
+        public static bool operator !=(GwMap a, GwMap b)
         {
             return !(a == b);
         }

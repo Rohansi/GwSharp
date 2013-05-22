@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
-namespace GuildWars2
+namespace GwSharp
 {
     public enum GwMatchTeam
     {

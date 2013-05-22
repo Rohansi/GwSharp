@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GuildWars2", "GuildWars2\GuildWars2.csproj", "{AB7937F2-EE8F-4B74-B809-6BD88146CBBC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GwSharp", "GwSharp\GwSharp.csproj", "{AB7937F2-EE8F-4B74-B809-6BD88146CBBC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{FAE1A1CA-94AE-4EEB-9DCD-3BD3DC97740C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{FAE1A1CA-94AE-4EEB-9DCD-3BD3DC97740C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -7,8 +7,8 @@
     <ProjectGuid>{AB7937F2-EE8F-4B74-B809-6BD88146CBBC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GuildWars2</RootNamespace>
-    <AssemblyName>GuildWars2</AssemblyName>
+    <RootNamespace>GwSharp</RootNamespace>
+    <AssemblyName>GwSharp</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

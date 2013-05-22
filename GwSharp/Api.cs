@@ -2,7 +2,7 @@
 using System.Linq;
 using RestSharp;
 
-namespace GuildWars2
+namespace GwSharp
 {
     internal class Api
     {

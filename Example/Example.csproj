@@ -7,8 +7,8 @@
     <ProjectGuid>{FAE1A1CA-94AE-4EEB-9DCD-3BD3DC97740C}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Test</RootNamespace>
-    <AssemblyName>Test</AssemblyName>
+    <RootNamespace>Example</RootNamespace>
+    <AssemblyName>Example</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -48,9 +48,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GuildWars2\GuildWars2.csproj">
+    <ProjectReference Include="..\GwSharp\GwSharp.csproj">
       <Project>{ab7937f2-ee8f-4b74-b809-6bd88146cbbc}</Project>
-      <Name>GuildWars2</Name>
+      <Name>GwSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -5,3 +5,4 @@ Events for:
 Provide previous state in events
 Event-free access to all information
 Code cleanup
+Items API

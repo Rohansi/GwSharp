@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace GuildWars2
+namespace GwSharp
 {
     [Flags]
     public enum GwNotifyFilter
@@ -140,8 +140,6 @@ namespace GuildWars2
         {
             while (true)
             {
-                Thread.Sleep(PollFrequency);
-
                 if (NotifyFilter.HasFlag(GwNotifyFilter.EventState))
                 {
                     var newEvents = api.GetEvents(world.Id);
@@ -218,6 +216,8 @@ namespace GuildWars2
 
                     details = newDetails;
                 }
+
+                Thread.Sleep(PollFrequency);
             }
         }
 

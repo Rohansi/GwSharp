@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace GuildWars2
+namespace GwSharp
 {
     public class GwMatch
     {
