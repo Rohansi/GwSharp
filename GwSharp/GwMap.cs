@@ -7,7 +7,14 @@ namespace GwSharp
 {
     public class GwMap
     {
+        /// <summary>
+        /// Unique identifier for the map.
+        /// </summary>
         public readonly string Id;
+
+        /// <summary>
+        /// Name of the map.
+        /// </summary>
         public readonly string Name;
 
         internal GwMap(string id, string name)

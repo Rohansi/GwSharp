@@ -6,23 +6,57 @@ using System.Threading;
 
 namespace GwSharp
 {
+    /// <summary>
+    /// Flags that are used to determine enabled features of a GwWatcher instance.
+    /// </summary>
     [Flags]
     public enum GwNotifyFilter
     {
-        None = 0,
+        /// <summary>
+        /// Watch for event state changes.
+        /// </summary>
         EventState = 1,
+
+        /// <summary>
+        /// Watch for WvW score changes.
+        /// </summary>
         WvWScore = 2,
-        WvWObjective = 4,
-        WvWMatchChange = 8,
-        WvW = WvWScore | WvWObjective | WvWMatchChange,
-        All = ushort.MaxValue
+
+        /// <summary>
+        /// Watch for WvW score changes, per map.
+        /// </summary>
+        WvWMapScore = 4,
+
+        /// <summary>
+        /// Watch for WvW objective changes.
+        /// </summary>
+        WvWObjective = 8,
+
+        /// <summary>
+        /// Watch for WvW match changes. Should occur weekly.
+        /// </summary>
+        WvWMatchChange = 16,
+
+        /// <summary>
+        /// Watch for all possible WvW changes.
+        /// </summary>
+        WvW = WvWScore | WvWMapScore | WvWObjective | WvWMatchChange,
+
+        /// <summary>
+        /// Watch for all possible changes.
+        /// </summary>
+        All = int.MaxValue
     }
 
+    /// <summary>
+    /// Watches for changes in data from the Guild Wars 2 API.
+    /// </summary>
     public class GwWatcher
     {
         public delegate void EventStateChangedCallback(GwWatcher sender, GwEvent ev);
         public delegate void WvWMatchesChangedCallback(GwWatcher sender);
-        public delegate void WvWScoreChangedCallback(GwWatcher sender, GwMatchMap map);
+        public delegate void WvWMapScoreChangedCallback(GwWatcher sender, GwMatchMap map);
+        public delegate void WvWScoreChangedCallback(GwWatcher sender, GwMatchDetails matchDetails);
         public delegate void WvWObjectiveChangedCallback(GwWatcher sender, GwMatchObjective objective);
 
         /// <summary>
@@ -113,6 +147,11 @@ namespace GwSharp
         /// <summary>
         /// Raised when the score for a WvW map changes.
         /// </summary>
+        public WvWMapScoreChangedCallback WvWMapScoreChanged;
+
+        /// <summary>
+        /// Raised when the score for the WvW matchup changes.
+        /// </summary>
         public WvWScoreChangedCallback WvWScoreChanged;
 
         /// <summary>
@@ -141,84 +180,105 @@ namespace GwSharp
             while (true)
             {
                 if (NotifyFilter.HasFlag(GwNotifyFilter.EventState))
-                {
-                    var newEvents = api.GetEvents(world.Id);
-
-                    if (events != null)
-                    {
-                        foreach (var ev in events)
-                        {
-                            var newEv = newEvents[ev.Key];
-                            if (ev.Value.State != newEv.State)
-                            {
-                                if (EventStateChanged != null)
-                                    EventStateChanged(this, newEv);
-                            }
-                        }
-                    }
-
-                    events = newEvents;
-                }
+                    CheckEventChanges();
 
                 // any WvW
                 if ((notifyFilter & GwNotifyFilter.WvW) != 0)
                 {
-                    var newMatches = api.GetMatches();
-
-                    if (notifyFilter.HasFlag(GwNotifyFilter.WvWMatchChange) && matches != null)
-                    {
-                        if (!matches.SequenceEqual(newMatches))
-                        {
-                            if (WvWMatchesChanged != null)
-                                WvWMatchesChanged(this);
-                        }
-                    }
-                   
-                    matches = newMatches;
-
-                    var newDetails = World.Match.FetchDetails();
-                    
-                    if (details != null)
-                    {
-                        if (notifyFilter.HasFlag(GwNotifyFilter.WvWScore))
-                        {
-                            for (var i = 0; i < details.Maps.Count; i++)
-                            {
-                                var o = details.Maps[i];
-                                var n = newDetails.Maps[i];
-
-                                if (o.Score != n.Score)
-                                {
-                                    if (WvWScoreChanged != null)
-                                        WvWScoreChanged(this, n);
-                                }
-                            }
-                        }
-
-                        if (notifyFilter.HasFlag(GwNotifyFilter.WvWObjective))
-                        {
-                            for (var i = 0; i < details.Maps.Count; i++)
-                            {
-                                var o = details.Maps[i];
-                                var n = newDetails.Maps[i];
-
-                                for (var j = 0; j < o.Objectives.Count; j++)
-                                {
-                                    if (o.Objectives[j] != n.Objectives[j])
-                                    {
-                                        if (WvWObjectiveChanged != null)
-                                            WvWObjectiveChanged(this, n.Objectives[j]);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    details = newDetails;
+                    CheckWvWMatchChanges();
+                    CheckWvWDetailChanges();
                 }
 
                 Thread.Sleep(PollFrequency);
             }
+        }
+
+        private void CheckEventChanges()
+        {
+            var newEvents = api.GetEvents(world.Id);
+
+            if (events != null)
+            {
+                foreach (var ev in events)
+                {
+                    var newEv = newEvents[ev.Key];
+                    if (ev.Value.State != newEv.State)
+                    {
+                        if (EventStateChanged != null)
+                            EventStateChanged(this, newEv);
+                    }
+                }
+            }
+
+            events = newEvents;
+        }
+
+        private void CheckWvWMatchChanges()
+        {
+            var newMatches = api.GetMatches();
+
+            if (notifyFilter.HasFlag(GwNotifyFilter.WvWMatchChange) && matches != null)
+            {
+                if (!matches.SequenceEqual(newMatches))
+                {
+                    if (WvWMatchesChanged != null)
+                        WvWMatchesChanged(this);
+                }
+            }
+
+            matches = newMatches;
+        }
+
+        private void CheckWvWDetailChanges()
+        {
+            var newDetails = World.Match.FetchDetails();
+
+            if (details != null)
+            {
+                if (notifyFilter.HasFlag(GwNotifyFilter.WvWScore))
+                {
+                    if (details.Score != newDetails.Score)
+                    {
+                        if (WvWScoreChanged != null)
+                            WvWScoreChanged(this, newDetails);
+                    }
+                }
+
+                if (notifyFilter.HasFlag(GwNotifyFilter.WvWMapScore))
+                {
+                    for (var i = 0; i < details.Maps.Count; i++)
+                    {
+                        var o = details.Maps[i];
+                        var n = newDetails.Maps[i];
+
+                        if (o.Score != n.Score)
+                        {
+                            if (WvWMapScoreChanged != null)
+                                WvWMapScoreChanged(this, n);
+                        }
+                    }
+                }
+
+                if (notifyFilter.HasFlag(GwNotifyFilter.WvWObjective))
+                {
+                    for (var i = 0; i < details.Maps.Count; i++)
+                    {
+                        var o = details.Maps[i];
+                        var n = newDetails.Maps[i];
+
+                        for (var j = 0; j < o.Objectives.Count; j++)
+                        {
+                            if (o.Objectives[j] != n.Objectives[j])
+                            {
+                                if (WvWObjectiveChanged != null)
+                                    WvWObjectiveChanged(this, n.Objectives[j]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            details = newDetails;
         }
 
         private void UpdateEnabled(bool enabled)

@@ -16,23 +16,23 @@ namespace Test
             // what to watch for
             watcher.NotifyFilter = GwNotifyFilter.All;
 
-            // start watching
-            watcher.EnableRaisingEvents = true;
-
             // how often to poll for changes
             watcher.PollFrequency = new TimeSpan(0, 0, 10);
+
+            // start watching
+            watcher.EnableRaisingEvents = true;
 
             // called when an event's status changes
             watcher.EventStateChanged += (sender, ev) =>
                 Console.WriteLine("{0}: {1}", ev.Name, ev.State);
 
-            // called when the score of a WvW map changes
+            // called when the WvW score changes
             watcher.WvWScoreChanged += (sender, map) =>
             {
                 var redScore = map.Score[GwMatchTeam.Red];
                 var blueScore = map.Score[GwMatchTeam.Blue];
                 var greenScore = map.Score[GwMatchTeam.Green];
-                Console.WriteLine("Score changed on {0}: R={1}, B={2}, G={3}", map.Type, redScore, blueScore, greenScore);
+                Console.WriteLine("Score changed: R={0}, B={1}, G={2}", redScore, blueScore, greenScore);
             };
 
             // called when a WvW objective changes

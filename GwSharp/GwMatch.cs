@@ -9,9 +9,25 @@ namespace GwSharp
     {
         private readonly Api api;
 
+        /// <summary>
+        /// Unique identifier for the match. It is in this format:
+        /// "R-T" where R is the region (1=US, 2=EU) and T is the tier
+        /// </summary>
         public readonly string Id;
+
+        /// <summary>
+        /// The world that is playing as red.
+        /// </summary>
         public readonly GwWorld Red;
+
+        /// <summary>
+        /// The world that is playing as blue.
+        /// </summary>
         public readonly GwWorld Blue;
+
+        /// <summary>
+        /// The world that is playing as green.
+        /// </summary>
         public readonly GwWorld Green;
 
         internal GwMatch(Api api, string id, GwWorld red, GwWorld blue, GwWorld green)
@@ -24,6 +40,9 @@ namespace GwSharp
             Green = green;
         }
 
+        /// <summary>
+        /// Returns the most up to date match details for this world.
+        /// </summary>
         public GwMatchDetails FetchDetails()
         {
             return api.GetMatchDetails(Id);

@@ -131,6 +131,7 @@ namespace GwSharp
                 map.Objectives = objectives.AsReadOnly();
                 maps.Add(map);
             }
+            details.Score = new GwMatchScore(response.Data.scores);
             details.Maps = maps.AsReadOnly();
             return details;
         }

@@ -13,8 +13,20 @@ namespace GwSharp
 
     public class GwMatchDetails
     {
+        /// <summary>
+        /// Unique identifier for the match. It is in this format:
+        /// "R-T" where R is the region (1 = US, 2 = EU) and T is the tier
+        /// </summary>
         public readonly string Id;
+
+        /// <summary>
+        /// Scores for the match. Access like an array with GwMatchTeam.
+        /// </summary>
         public GwMatchScore Score { get; internal set; }
+
+        /// <summary>
+        /// List of maps in this matchup.
+        /// </summary>
         public ReadOnlyCollection<GwMatchMap> Maps { get; internal set; }
 
         public GwMatchDetails(string id)
@@ -52,9 +64,24 @@ namespace GwSharp
 
     public class GwMatchMap
     {
+        /// <summary>
+        /// Reference to the parent GwMatchDetails instance.
+        /// </summary>
         public readonly GwMatchDetails Details;
+
+        /// <summary>
+        /// Type of the map.
+        /// </summary>
         public readonly string Type;
+
+        /// <summary>
+        /// Scores for the match. Access like an array with GwMatchTeam.
+        /// </summary>
         public readonly GwMatchScore Score;
+
+        /// <summary>
+        /// List of objectives in this map.
+        /// </summary>
         public ReadOnlyCollection<GwMatchObjective> Objectives { get; internal set; }
 
         public GwMatchMap(GwMatchDetails details, string type, List<int> score)
@@ -94,10 +121,29 @@ namespace GwSharp
 
     public class GwMatchObjective
     {
+        /// <summary>
+        /// Reference to the parent GwMatchDetails instance.
+        /// </summary>
         public readonly GwMatchDetails Details;
+
+        /// <summary>
+        /// Reference to the parent GwMatchMap instance.
+        /// </summary>
         public readonly GwMatchMap Map;
+
+        /// <summary>
+        /// Unique identifier of the objective.
+        /// </summary>
         public readonly string Id;
+
+        /// <summary>
+        /// Name of the objective.
+        /// </summary>
         public readonly string Name;
+
+        /// <summary>
+        /// Owner of the objective.
+        /// </summary>
         public readonly GwMatchTeam Owner;
 
         public GwMatchObjective(GwMatchDetails details, GwMatchMap map, string id, string name, GwMatchTeam owner)
@@ -137,6 +183,9 @@ namespace GwSharp
         }
     }
 
+    /// <summary>
+    /// Score container. Access like an array with GwMatchTeam.
+    /// </summary>
     public class GwMatchScore
     {
         private readonly List<int> scores;

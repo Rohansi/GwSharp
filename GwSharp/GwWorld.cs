@@ -8,7 +8,16 @@ namespace GwSharp
     public class GwWorld
     {
         private readonly Api api;
+
+        /// <summary>
+        /// Unique identifier of the world. It is in this format:
+        /// "RLXX" where R is region (1=US, 2=EU), L is language (0=EN, 1=FR, 2=DE, 3=SP) and XX is for uniqueness
+        /// </summary>
         public string Id { get; internal set; }
+
+        /// <summary>
+        /// Name of the world.
+        /// </summary>
         public string Name { get; internal set; }
 
         internal GwWorld(Api api, string id, string name)

@@ -43,10 +43,29 @@ namespace GwSharp
 
     public class GwEvent
     {
+        /// <summary>
+        /// Unique identifier of the event.
+        /// </summary>
         public readonly string Id;
+
+        /// <summary>
+        /// Name of the event.
+        /// </summary>
         public readonly string Name;
+
+        /// <summary>
+        /// World that the event is taking place in.
+        /// </summary>
         public readonly GwWorld World;
+
+        /// <summary>
+        /// Map that the event is taking place in. 
+        /// </summary>
         public readonly GwMap Map;
+
+        /// <summary>
+        /// Current state of the event.
+        /// </summary>
         public readonly GwEventState State;
 
         internal GwEvent(string id, string name, GwWorld world, GwMap map, GwEventState state)
