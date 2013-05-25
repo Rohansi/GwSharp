@@ -51,6 +51,7 @@
     <Compile Include="NameCache.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="GwWorld.cs" />
+    <Compile Include="ReadOnlyDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

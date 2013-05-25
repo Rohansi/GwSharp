@@ -62,14 +62,25 @@ namespace GwSharp
             var request = new RestRequest(RequestUrls["Events"], Method.GET);
             request.AddParameter("world_id", worldId);
             var response = client.Execute<EventsResult>(request);
+            var events = response.Data.events;
 
             var result = new Dictionary<string, GwEvent>();
-            foreach (var i in response.Data.events)
+            foreach (var id in nameCache.GetEvents())
             {
-                var world = new GwWorld(this, i.world_id, nameCache.GetWorld(i.world_id));
-                var map = new GwMap(i.map_id, nameCache.GetMap(i.map_id));
-                var ev = new GwEvent(i.event_id, nameCache.GetEvent(i.event_id), world, map, i.state);
-                result.Add(ev.Id, ev);
+                Event ev;
+                GwEvent newEv;
+                if ((ev = events.FirstOrDefault(e => e.event_id == id)) == null)
+                {
+                    newEv = new GwEvent(id, nameCache.GetEvent(id), null, null, GwEventState.Inactive);
+                }
+                else
+                {
+                    var world = new GwWorld(this, ev.world_id, nameCache.GetWorld(ev.world_id));
+                    var map = new GwMap(ev.map_id, nameCache.GetMap(ev.map_id));
+                    newEv = new GwEvent(ev.event_id, nameCache.GetEvent(ev.event_id), world, map, ev.state);
+                }
+                
+                result.Add(newEv.Id, newEv);
             }
             return result;
         }

@@ -23,21 +23,21 @@ namespace Test
             watcher.EnableRaisingEvents = true;
 
             // called when an event's status changes
-            watcher.EventStateChanged += (sender, ev) =>
-                Console.WriteLine("{0}: {1}", ev.Name, ev.State);
+            watcher.EventStateChanged += (sender, previous, current) =>
+                Console.WriteLine("{0}: {1}", current.Name, current.State);
 
             // called when the WvW score changes
-            watcher.WvWScoreChanged += (sender, map) =>
+            watcher.WvWScoreChanged += (sender, previous, current) =>
             {
-                var redScore = map.Score[GwMatchTeam.Red];
-                var blueScore = map.Score[GwMatchTeam.Blue];
-                var greenScore = map.Score[GwMatchTeam.Green];
+                var redScore = current.Score[GwMatchTeam.Red];
+                var blueScore = current.Score[GwMatchTeam.Blue];
+                var greenScore = current.Score[GwMatchTeam.Green];
                 Console.WriteLine("Score changed: R={0}, B={1}, G={2}", redScore, blueScore, greenScore);
             };
 
             // called when a WvW objective changes
-            watcher.WvWObjectiveChanged += (sender, objective) =>
-                Console.WriteLine("{0}: {1} now belongs to {2}", objective.Map.Type, objective.Name, objective.Owner);
+            watcher.WvWObjectiveChanged += (sender, previous, current) =>
+                Console.WriteLine("{0}: {1} now belongs to {2}", current.Map.Type, current.Name, current.Owner);
         }
     }
 }

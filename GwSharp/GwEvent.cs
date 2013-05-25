@@ -54,12 +54,12 @@ namespace GwSharp
         public readonly string Name;
 
         /// <summary>
-        /// World that the event is taking place in.
+        /// World that the event is taking place in. Null if State is inactive.
         /// </summary>
         public readonly GwWorld World;
 
         /// <summary>
-        /// Map that the event is taking place in. 
+        /// Map that the event is taking place in. Null if State is inactive.
         /// </summary>
         public readonly GwMap Map;
 

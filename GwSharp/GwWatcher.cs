@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,6 +39,11 @@ namespace GwSharp
         WvWMatchChange = 16,
 
         /// <summary>
+        /// Watch for all possible PvE changes.
+        /// </summary>
+        PvE = EventState,
+
+        /// <summary>
         /// Watch for all possible WvW changes.
         /// </summary>
         WvW = WvWScore | WvWMapScore | WvWObjective | WvWMatchChange,
@@ -53,11 +59,8 @@ namespace GwSharp
     /// </summary>
     public class GwWatcher
     {
-        public delegate void EventStateChangedCallback(GwWatcher sender, GwEvent ev);
-        public delegate void WvWMatchesChangedCallback(GwWatcher sender);
-        public delegate void WvWMapScoreChangedCallback(GwWatcher sender, GwMatchMap map);
-        public delegate void WvWScoreChangedCallback(GwWatcher sender, GwMatchDetails matchDetails);
-        public delegate void WvWObjectiveChangedCallback(GwWatcher sender, GwMatchObjective objective);
+        public delegate void DataReadyCallback(GwWatcher sender);
+        public delegate void DataChangedCallback<in T>(GwWatcher sender, T previous, T current);
 
         /// <summary>
         /// Enumeration of all worlds.
@@ -80,7 +83,26 @@ namespace GwSharp
         /// </summary>
         public IEnumerable<GwMatch> Matches
         {
-            get { lock (dataLock) return (matches ?? api.GetMatches()).Values.ToList(); }
+            get
+            {
+                if ((notifyFilter & GwNotifyFilter.WvW) == 0)
+                    throw new Exception("WvW data is not enabled");
+                lock (dataLock)
+                    return matches.Values.ToList();
+            }
+        }
+
+        /// <summary>
+        /// Dictionary of current events.
+        /// </summary>
+        public ReadOnlyDictionary<string, GwEvent> Events
+        {
+            get
+            {
+                if (!notifyFilter.HasFlag(GwNotifyFilter.EventState))
+                    throw new Exception("Event data is not enabled");
+                return new ReadOnlyDictionary<string, GwEvent>(events);
+            }
         }
 
         /// <summary>
@@ -135,29 +157,34 @@ namespace GwSharp
         public TimeSpan PollFrequency = new TimeSpan(0, 0, 15);
 
         /// <summary>
+        /// Raised after new information is polled for.
+        /// </summary>
+        public event DataReadyCallback DataReady;
+
+        /// <summary>
         /// Raised when an event status has changed.
         /// </summary>
-        public event EventStateChangedCallback EventStateChanged;
+        public event DataChangedCallback<GwEvent> EventStateChanged;
 
         /// <summary>
         /// Raised when the WvW matches change weekly.
         /// </summary>
-        public event WvWMatchesChangedCallback WvWMatchesChanged;
+        public event DataReadyCallback WvWMatchesChanged;
 
         /// <summary>
         /// Raised when the score for a WvW map changes.
         /// </summary>
-        public WvWMapScoreChangedCallback WvWMapScoreChanged;
+        public DataChangedCallback<GwMatchMap> WvWMapScoreChanged;
 
         /// <summary>
         /// Raised when the score for the WvW matchup changes.
         /// </summary>
-        public WvWScoreChangedCallback WvWScoreChanged;
+        public DataChangedCallback<GwMatchDetails> WvWScoreChanged;
 
         /// <summary>
         /// Raised when an objective in WvW changes.
         /// </summary>
-        public WvWObjectiveChangedCallback WvWObjectiveChanged;
+        public DataChangedCallback<GwMatchObjective> WvWObjectiveChanged;
 
         private Api api;
         private bool enableRaisingEvents = false;
@@ -166,7 +193,7 @@ namespace GwSharp
         private Thread pollThread;
 
         private readonly object dataLock = new object();
-        private Dictionary<string, GwEvent> events;
+        private ConcurrentDictionary<string, GwEvent> events;
         private Dictionary<string, GwMatch> matches;
         private GwMatchDetails details;
 
@@ -179,15 +206,21 @@ namespace GwSharp
         {
             while (true)
             {
-                if (NotifyFilter.HasFlag(GwNotifyFilter.EventState))
-                    CheckEventChanges();
-
-                // any WvW
-                if ((notifyFilter & GwNotifyFilter.WvW) != 0)
+                lock (dataLock)
                 {
-                    CheckWvWMatchChanges();
-                    CheckWvWDetailChanges();
+                    if (NotifyFilter.HasFlag(GwNotifyFilter.EventState))
+                        CheckEventChanges();
+
+                    // any WvW
+                    if ((notifyFilter & GwNotifyFilter.WvW) != 0)
+                    {
+                        CheckWvWMatchChanges();
+                        CheckWvWDetailChanges();
+                    }
                 }
+
+                if (DataReady != null)
+                    DataReady(this);
 
                 Thread.Sleep(PollFrequency);
             }
@@ -205,12 +238,12 @@ namespace GwSharp
                     if (ev.Value.State != newEv.State)
                     {
                         if (EventStateChanged != null)
-                            EventStateChanged(this, newEv);
+                            EventStateChanged(this, ev.Value, newEv);
                     }
                 }
             }
 
-            events = newEvents;
+            events = new ConcurrentDictionary<string, GwEvent>(newEvents);
         }
 
         private void CheckWvWMatchChanges()
@@ -240,7 +273,7 @@ namespace GwSharp
                     if (details.Score != newDetails.Score)
                     {
                         if (WvWScoreChanged != null)
-                            WvWScoreChanged(this, newDetails);
+                            WvWScoreChanged(this, details, newDetails);
                     }
                 }
 
@@ -254,7 +287,7 @@ namespace GwSharp
                         if (o.Score != n.Score)
                         {
                             if (WvWMapScoreChanged != null)
-                                WvWMapScoreChanged(this, n);
+                                WvWMapScoreChanged(this, o, n);
                         }
                     }
                 }
@@ -271,7 +304,7 @@ namespace GwSharp
                             if (o.Objectives[j] != n.Objectives[j])
                             {
                                 if (WvWObjectiveChanged != null)
-                                    WvWObjectiveChanged(this, n.Objectives[j]);
+                                    WvWObjectiveChanged(this, o.Objectives[j], n.Objectives[j]);
                             }
                         }
                     }

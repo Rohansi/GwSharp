@@ -1,8 +1,4 @@
-Events for:
- - Data Updated (for event-free use)
-
-Provide previous state in events
-Event-free access to all information
-Fix events that are inactive
+Fix events that are inactive (done?)
 Code cleanup
+Optimize (reduce collection copying, etc)
 Items API
